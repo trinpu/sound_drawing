@@ -7,7 +7,7 @@ import random
 samplerate = 44100  # Audio sample rate
 duration = 0.1      # Duration per audio block
 block_size = int(samplerate * duration)
-num_particles = 300  # Number of particles
+num_particles = 200  # Number of particles
 db_threshold = 50    # Decibel threshold for triggering effects
 
 # Global variable to share audio visualization data
@@ -74,7 +74,7 @@ def audio_callback(indata, frames, time, status):
 # VisPy Canvas setup
 class ParticleCanvas(scene.SceneCanvas):
     def __init__(self):
-        scene.SceneCanvas.__init__(self, keys='interactive', size=(800, 600), title="3D Particle Visualization")
+        scene.SceneCanvas.__init__(self, keys='interactive', size=(3000,1500), decorate=False)
         self.unfreeze()
 
         # Create a viewbox for 3D rendering
