@@ -141,3 +141,40 @@ def render_visualization(screen, particles):
         particle.draw(screen)
 
     pygame.display.flip()  # Update the display
+
+
+# Main function
+def main():
+    global visualization_data
+
+    # Initialize Pygame
+    pygame.init()
+    screen = pygame.display.set_mode((800, 600))
+    clock = pygame.time.Clock()
+
+    # Create particles
+    particles = [Particle() for _ in range(num_particles)]
+
+    # Start audio stream
+    stream = sd.InputStream(callback=audio_callback, samplerate=samplerate, channels=1, blocksize=block_size)
+    stream.start()
+
+    # Main loop
+    running = True
+    while running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+
+        # Render the visualization
+        render_visualization(screen, particles)
+        clock.tick(30)  # Limit to 30 FPS
+
+    # Clean up
+    stream.stop()
+    stream.close()
+    pygame.quit()
+
+# Entry point
+if __name__ == "__main__":
+    main()
