@@ -103,3 +103,30 @@ class Particle:
             self.y += dy / distance * overlap / 2
             other.x -= dx / distance * overlap / 2
             other.y -= dy / distance * overlap / 2
+
+
+# Visualization rendering function
+def render_visualization(screen, particles):
+    """Render visuals based on real-time audio data."""
+    screen.fill((0, 0, 0))  # Clear screen
+
+    # Get sound features
+    amplitude = visualization_data["amplitude"]
+    fft = visualization_data["fft"]
+    decibels = visualization_data.get("decibels", 0)
+    beat = visualization_data.get("beat", 0)
+
+    # Debugging log
+    print(f"Rendering with Amplitude: {amplitude:.4f}, Decibels: {decibels:.2f}, Beat: {beat:.2f}")
+
+    # Check collisions and update particles
+    for i, particle in enumerate(particles):
+        for j in range(i + 1, len(particles)):
+            particle.check_collision(particles[j])
+
+        particle.move(amplitude, decibels)
+        if decibels >= db_threshold:
+            particle.apply_sound_effects(fft, beat)
+        particle.draw(screen)
+
+    pygame.display.flip()  # Update the display
