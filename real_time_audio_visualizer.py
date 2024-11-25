@@ -11,6 +11,17 @@ block_size = int(samplerate * duration)
 num_particles = 100  # Number of particles
 db_threshold = 50    # Decibel threshold for triggering effects
 
+# Global variable to share visualization data
+visualization_data = {"amplitude": 0, "fft": [], "frequencies": [], "beat": 0}
+
+# Real-time audio callback
+def audio_callback(indata, frames, time, status):
+    """Callback function for audio input."""
+    if status:
+        print(status)
+    audio_block = indata[:, 0]  # Extract single channel
+    process_audio(audio_block)  # Pass to processing layer
+
 # Audio processing function
 def process_audio(audio_block):
     """Process real-time audio block."""
