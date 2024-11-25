@@ -32,15 +32,18 @@ class ParticleSystem:
             self.positions = np.where(self.positions > 1, -1, self.positions)
             self.positions = np.where(self.positions < -1, 1, self.positions)
 
-            # Change sizes dynamically
-            dominant_size = max(5, min(50, amplitude * 500))
-            self.sizes = np.clip(self.sizes + np.random.uniform(-1, 1, self.num_particles), 5, dominant_size)
+            # Increase sizes dynamically when sound is active
+            if amplitude > 0.01:  # Sound activation threshold
+                self.sizes = np.clip(self.sizes + amplitude * 15, 5, 50)  # Grow sizes smoothly
+            else:
+                self.sizes = np.clip(self.sizes - 1, 5, 30)  # Shrink back to default
 
             # Change colors based on FFT
             if len(fft_magnitude) > 0:
                 max_fft_idx = np.argmax(fft_magnitude)
                 dominant_color = fft_magnitude[max_fft_idx] / np.max(fft_magnitude)
                 self.colors[:, :3] = dominant_color * np.random.uniform(0.5, 1.0, (self.num_particles, 3))
+
 
 # Audio callback
 def audio_callback(indata, frames, time, status):
