@@ -44,3 +44,44 @@ def process_audio(audio_block):
         "decibels": decibels,
         "beat": beat
     }
+
+
+# Particle class
+class Particle:
+    def __init__(self):
+        self.x = random.uniform(0, 800)
+        self.y = random.uniform(0, 600)
+        self.size = random.uniform(5, 15)
+        self.color = (255, 255, 255)
+        self.velocity = [random.uniform(-1, 1), random.uniform(-1, 1)]
+
+    def move(self, amplitude, decibels):
+        """Move the particle."""
+        # Base speed for slow movement
+        base_speed = 0.5
+        speed = base_speed if decibels < db_threshold else base_speed + amplitude * 10  # Increased scaling factor
+        self.x += self.velocity[0] * speed
+        self.y += self.velocity[1] * speed
+
+        # Wrap around the screen
+        if self.x < 0 or self.x > 800:
+            self.velocity[0] *= -1
+        if self.y < 0 or self.y > 600:
+            self.velocity[1] *= -1
+
+    def apply_sound_effects(self, fft, beat):
+        """Apply sound-driven dynamics."""
+        # Change color based on frequency spectrum
+        if len(fft) > 0:
+            frequency_index = random.randint(0, len(fft) - 1)
+            self.color = (
+                int(fft[frequency_index] * 255),
+                random.randint(50, 150),
+                random.randint(100, 200)
+            )
+        # Change size based on beat
+        self.size = max(5, beat / 100)
+
+    def draw(self, screen):
+        """Draw the particle on the screen."""
+        pygame.draw.circle(screen, self.color, (int(self.x), int(self.y)), int(self.size))
