@@ -1,180 +1,125 @@
-import sounddevice as sd
 import numpy as np
-import pygame
+import sounddevice as sd
+from vispy import app, gloo, visuals, scene
 import random
-import math
 
 # Parameters
-samplerate = 44100  # Standard audio sample rate
-duration = 0.1      # Duration per audio block in seconds
+samplerate = 44100  # Audio sample rate
+duration = 0.1      # Duration per audio block
 block_size = int(samplerate * duration)
-num_particles = 100  # Number of particles
+num_particles = 300  # Number of particles
 db_threshold = 50    # Decibel threshold for triggering effects
 
-# Global variable to share visualization data
+# Global variable to share audio visualization data
 visualization_data = {"amplitude": 0, "fft": [], "frequencies": [], "beat": 0}
 
-# Real-time audio callback
+# Particle system setup
+class ParticleSystem:
+    def __init__(self, num_particles):
+        self.num_particles = num_particles
+        self.positions = np.random.uniform(-1, 1, (num_particles, 3))  # 3D positions
+        self.velocities = np.random.uniform(-0.01, 0.01, (num_particles, 3))  # Random 3D velocities
+        self.sizes = np.random.uniform(5, 15, num_particles)  # Particle sizes
+        self.colors = np.ones((num_particles, 4), dtype=np.float32)  # RGBA colors (white)
+
+    def update(self, amplitude, fft_magnitude):
+        """Update particle properties based on audio data."""
+        if amplitude > 0:
+            # Update positions
+            self.positions += self.velocities * (1 + amplitude * 10)
+
+            # Wrap around bounds (-1 to 1 in all directions)
+            self.positions = np.where(self.positions > 1, -1, self.positions)
+            self.positions = np.where(self.positions < -1, 1, self.positions)
+
+            # Change sizes dynamically
+            dominant_size = max(5, min(50, amplitude * 500))
+            self.sizes = np.clip(self.sizes + np.random.uniform(-1, 1, self.num_particles), 5, dominant_size)
+
+            # Change colors based on FFT
+            if len(fft_magnitude) > 0:
+                max_fft_idx = np.argmax(fft_magnitude)
+                dominant_color = fft_magnitude[max_fft_idx] / np.max(fft_magnitude)
+                self.colors[:, :3] = dominant_color * np.random.uniform(0.5, 1.0, (self.num_particles, 3))
+
+# Audio callback
 def audio_callback(indata, frames, time, status):
-    """Callback function for audio input."""
+    """Process audio input and extract visualization data."""
+    global visualization_data
     if status:
         print(status)
+
     audio_block = indata[:, 0]  # Extract single channel
-    process_audio(audio_block)  # Pass to processing layer
-
-# Audio processing function
-def process_audio(audio_block):
-    """Process real-time audio block."""
-    global visualization_data
-
-    # Compute amplitude
     amplitude = np.abs(audio_block).mean()
 
-    # Convert amplitude to decibels
-    if amplitude > 0:
-        decibels = 20 * np.log10(amplitude) + 100  # Normalize to positive range
-    else:
-        decibels = 0  # Silence case
-
-    # Compute FFT for frequency analysis
+    # Compute FFT
     fft = np.fft.fft(audio_block)
-    frequencies = np.fft.fftfreq(len(fft), 1 / samplerate)
     fft_magnitude = np.abs(fft[:len(fft) // 2])
-
-    # Normalize FFT data for visualization
     fft_magnitude_normalized = fft_magnitude / np.max(fft_magnitude) if np.max(fft_magnitude) > 0 else fft_magnitude
 
-    # Beat detection (simplistic: high energy in bass frequencies)
-    beat = np.sum(fft_magnitude[:int(len(fft_magnitude) * 0.1)])  # Energy in the lower 10% of frequencies
+    # Beat detection (simplistic: energy in low frequencies)
+    beat = np.sum(fft_magnitude[:len(fft_magnitude) // 10])
 
-    # Update data for visualization
+    # Update visualization data
     visualization_data = {
         "amplitude": amplitude,
         "fft": fft_magnitude_normalized,
-        "frequencies": frequencies[:len(frequencies) // 2],
-        "decibels": decibels,
+        "frequencies": np.fft.fftfreq(len(fft), 1 / samplerate)[:len(fft) // 2],
         "beat": beat
     }
 
-
-# Particle class
-class Particle:
+# VisPy Canvas setup
+class ParticleCanvas(scene.SceneCanvas):
     def __init__(self):
-        self.x = random.uniform(0, 800)
-        self.y = random.uniform(0, 600)
-        self.size = random.uniform(5, 15)
-        self.color = (255, 255, 255)
-        self.velocity = [random.uniform(-1, 1), random.uniform(-1, 1)]
+        scene.SceneCanvas.__init__(self, keys='interactive', size=(800, 600), title="3D Particle Visualization")
+        self.unfreeze()
 
-    def move(self, amplitude, decibels):
-        """Move the particle."""
-        # Base speed for slow movement
-        base_speed = 0.5
-        speed = base_speed if decibels < db_threshold else base_speed + amplitude * 10  # Increased scaling factor
-        self.x += self.velocity[0] * speed
-        self.y += self.velocity[1] * speed
+        # Create a viewbox for 3D rendering
+        self.view = self.central_widget.add_view()
+        self.view.camera = 'arcball'  # Arcball camera for 3D interaction
+        self.view.camera.fov = 60  # Field of view
 
-        # Wrap around the screen
-        if self.x < 0 or self.x > 800:
-            self.velocity[0] *= -1
-        if self.y < 0 or self.y > 600:
-            self.velocity[1] *= -1
+        # Particle system
+        self.particle_system = ParticleSystem(num_particles)
 
-    def apply_sound_effects(self, fft, beat):
-        """Apply sound-driven dynamics."""
-        # Change color based on frequency spectrum
-        if len(fft) > 0:
-            frequency_index = random.randint(0, len(fft) - 1)
-            self.color = (
-                int(fft[frequency_index] * 255),
-                random.randint(50, 150),
-                random.randint(100, 200)
-            )
-        # Change size based on beat
-        self.size = max(5, beat / 100)
+        # Create a scatter plot for particles
+        self.scatter = scene.visuals.Markers()
+        self.view.add(self.scatter)
 
-    def draw(self, screen):
-        """Draw the particle on the screen."""
-        pygame.draw.circle(screen, self.color, (int(self.x), int(self.y)), int(self.size))
+        self.timer = app.Timer('auto', connect=self.update_particles, start=True)
 
-    def check_collision(self, other):
-        """Check and handle collision with another particle."""
-        dx = self.x - other.x
-        dy = self.y - other.y
-        distance = math.sqrt(dx**2 + dy**2)
+    def update_particles(self, event):
+        """Update particle positions, sizes, and colors."""
+        amplitude = visualization_data["amplitude"]
+        fft = visualization_data["fft"]
 
-        # Check if particles are colliding
-        if distance < self.size + other.size:
-            # Resolve collision by swapping velocities
-            self.velocity, other.velocity = other.velocity, self.velocity
+        self.particle_system.update(amplitude, fft)
 
-            # Separate particles slightly to avoid sticking
-            overlap = self.size + other.size - distance
-            self.x += dx / distance * overlap / 2
-            self.y += dy / distance * overlap / 2
-            other.x -= dx / distance * overlap / 2
-            other.y -= dy / distance * overlap / 2
-
-
-# Visualization rendering function
-def render_visualization(screen, particles):
-    """Render visuals based on real-time audio data."""
-    screen.fill((0, 0, 0))  # Clear screen
-
-    # Get sound features
-    amplitude = visualization_data["amplitude"]
-    fft = visualization_data["fft"]
-    decibels = visualization_data.get("decibels", 0)
-    beat = visualization_data.get("beat", 0)
-
-    # Debugging log
-    print(f"Rendering with Amplitude: {amplitude:.4f}, Decibels: {decibels:.2f}, Beat: {beat:.2f}")
-
-    # Check collisions and update particles
-    for i, particle in enumerate(particles):
-        for j in range(i + 1, len(particles)):
-            particle.check_collision(particles[j])
-
-        particle.move(amplitude, decibels)
-        if decibels >= db_threshold:
-            particle.apply_sound_effects(fft, beat)
-        particle.draw(screen)
-
-    pygame.display.flip()  # Update the display
-
+        # Update scatter plot with new particle data
+        self.scatter.set_data(
+            pos=self.particle_system.positions,
+            size=self.particle_system.sizes,
+            face_color=self.particle_system.colors
+        )
+        self.update()
 
 # Main function
 def main():
     global visualization_data
 
-    # Initialize Pygame
-    pygame.init()
-    screen = pygame.display.set_mode((800, 600))
-    clock = pygame.time.Clock()
-
-    # Create particles
-    particles = [Particle() for _ in range(num_particles)]
-
     # Start audio stream
     stream = sd.InputStream(callback=audio_callback, samplerate=samplerate, channels=1, blocksize=block_size)
     stream.start()
 
-    # Main loop
-    running = True
-    while running:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                running = False
+    # Create and show the VisPy canvas
+    canvas = ParticleCanvas()
+    canvas.show()
 
-        # Render the visualization
-        render_visualization(screen, particles)
-        clock.tick(30)  # Limit to 30 FPS
+    # Run the VisPy app
+    app.run()
 
-    # Clean up
+    # Stop audio stream when closing the app
     stream.stop()
-    stream.close()
-    pygame.quit()
 
-# Entry point
 if __name__ == "__main__":
     main()
