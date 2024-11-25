@@ -85,3 +85,21 @@ class Particle:
     def draw(self, screen):
         """Draw the particle on the screen."""
         pygame.draw.circle(screen, self.color, (int(self.x), int(self.y)), int(self.size))
+
+    def check_collision(self, other):
+        """Check and handle collision with another particle."""
+        dx = self.x - other.x
+        dy = self.y - other.y
+        distance = math.sqrt(dx**2 + dy**2)
+
+        # Check if particles are colliding
+        if distance < self.size + other.size:
+            # Resolve collision by swapping velocities
+            self.velocity, other.velocity = other.velocity, self.velocity
+
+            # Separate particles slightly to avoid sticking
+            overlap = self.size + other.size - distance
+            self.x += dx / distance * overlap / 2
+            self.y += dy / distance * overlap / 2
+            other.x -= dx / distance * overlap / 2
+            other.y -= dy / distance * overlap / 2
