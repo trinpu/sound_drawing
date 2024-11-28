@@ -114,7 +114,9 @@ class ParticleSystem:
 
 class ParticleCanvas(scene.SceneCanvas):
     def __init__(self):
-        scene.SceneCanvas.__init__(self, keys="interactive", size=(800, 600), bgcolor="black")
+        
+        screen_size = {'latptop': (900, 900), 'projector': (3000,1500)}
+        scene.SceneCanvas.__init__(self, keys="interactive", size=screen_size['laptop'], bgcolor="black")
         self.unfreeze()
         self.view = self.central_widget.add_view()
         self.view.camera = "arcball"
