@@ -13,18 +13,18 @@ visualization_data = {"amplitude": 0, "fft": [], "frequencies": [], "dominant_no
 
 # Note colors
 note_to_color = {
-    "C": (1.0, 0.0, 0.0, 1.0),    # Red
-    "C#": (1.0, 0.5, 0.0, 1.0),   # Orange
-    "D": (1.0, 1.0, 0.0, 1.0),    # Yellow
-    "D#": (0.5, 1.0, 0.0, 1.0),   # Lime
-    "E": (0.0, 1.0, 0.0, 1.0),    # Green
-    "F": (0.0, 1.0, 0.5, 1.0),    # Aqua
-    "F#": (0.0, 1.0, 1.0, 1.0),   # Cyan
-    "G": (0.0, 0.5, 1.0, 1.0),    # Sky Blue
-    "G#": (0.0, 0.0, 1.0, 1.0),   # Blue
-    "A": (0.5, 0.0, 1.0, 1.0),    # Purple
-    "A#": (1.0, 0.0, 1.0, 1.0),   # Magenta
-    "B": (1.0, 0.0, 0.5, 1.0),    # Pink
+    "C": (0.6, 0.6, 1.0, 1.0),    # Soft blue
+    "C#": (0.8, 0.6, 1.0, 1.0),   # Lavender
+    "D": (1.0, 0.8, 1.0, 1.0),    # Light pink
+    "D#": (1.0, 0.6, 0.8, 1.0),   # Rosy pink
+    "E": (1.0, 0.6, 0.6, 1.0),    # Warm red-pink
+    "F": (1.0, 0.8, 0.6, 1.0),    # Peach
+    "F#": (1.0, 1.0, 0.8, 1.0),   # Warm white
+    "G": (0.8, 1.0, 0.8, 1.0),    # Pale green
+    "G#": (0.6, 1.0, 0.8, 1.0),   # Aqua-mint
+    "A": (0.6, 1.0, 1.0, 1.0),    # Cyan
+    "A#": (0.6, 0.8, 1.0, 1.0),   # Sky blue
+    "B": (0.8, 0.6, 1.0, 1.0),    # Violet
 }
 
 
@@ -76,14 +76,14 @@ class ParticleSystem:
 
         for _ in range(5):  # Create up to 5 particles per note
             position = np.random.uniform(-1, 1, 3)
-            size = max(5, amplitude * 50)
-            velocity = np.random.uniform(-0.02, 0.02, 3) * amplitude * 20
+            size = np.random.randint(1, max(15, amplitude * 80))
+            velocity = np.random.uniform(-0.05, 0.05, 3) * amplitude * 20
             particle = {
                 "position": position,
                 "size": size,
                 "color": np.array(color, dtype=np.float32),  # Use note color
                 "velocity": velocity,
-                "lifetime": 10  # Lifetime in frames
+                "lifetime": 15  # Lifetime in frames
             }
             self.particles.append(particle)
 
