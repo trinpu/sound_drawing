@@ -43,7 +43,7 @@ class ParticleSystem:
             if len(fft_magnitude) > 0:
                 max_fft_idx = np.argmax(fft_magnitude)
                 dominant_color = fft_magnitude[max_fft_idx] / np.max(fft_magnitude)
-                self.colors[:, :3] = dominant_color * np.random.uniform(0.5, 1.0, (self.num_particles, 3))
+                self.colors[:, :3] = dominant_color * np.random.uniform(0.5, 0.8, (self.num_particles, 3))
 
 
 # Audio callback
@@ -61,15 +61,11 @@ def audio_callback(indata, frames, time, status):
     fft_magnitude = np.abs(fft[:len(fft) // 2])
     fft_magnitude_normalized = fft_magnitude / np.max(fft_magnitude) if np.max(fft_magnitude) > 0 else fft_magnitude
 
-    # Beat detection (simplistic: energy in low frequencies)
-    beat = np.sum(fft_magnitude[:len(fft_magnitude) // 10])
-
     # Update visualization data
     visualization_data = {
         "amplitude": amplitude,
         "fft": fft_magnitude_normalized,
-        "frequencies": np.fft.fftfreq(len(fft), 1 / samplerate)[:len(fft) // 2],
-        "beat": beat
+        "frequencies": np.fft.fftfreq(len(fft), 1 / samplerate)[:len(fft) // 2]
     }
 
 # VisPy Canvas setup
@@ -82,7 +78,7 @@ class ParticleCanvas(scene.SceneCanvas):
         # Create a viewbox for 3D rendering
         self.view = self.central_widget.add_view()
         self.view.camera = 'arcball'  # Arcball camera for 3D interaction
-        self.view.camera.fov = 60  # Field of view
+        self.view.camera.fov = 90  # Field of view
 
         # Particle system
         self.particle_system = ParticleSystem(num_particles)
