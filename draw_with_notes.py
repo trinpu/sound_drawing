@@ -65,11 +65,18 @@ class ParticleSystem:
         for _ in range(5):  # Create up to 5 particles per note
             position = np.random.uniform(-1, 1, 3)
             size = max(5, amplitude * 50)
-            color = np.array(random.choice(galaxy_colors))
-            if len(color) == 3:
-                color = np.append(color, 1.0)  # Ensure RGBA format
-            velocity = np.random.uniform(-0.02, 0.02, 3) * amplitude * 10
-            self.particles.append({"position": position, "size": size, "color": color, "velocity": velocity, "lifetime": 5})
+            color = np.clip(np.array(random.choice(galaxy_colors), dtype=np.float32), 0.0, 1.0)  # Ensure floats in [0, 1]
+            if len(color) == 3:  # Add alpha if missing
+                color = np.append(color, 1.0)
+            velocity = np.random.uniform(-0.02, 0.02, 3) * amplitude * 20
+            particle = {
+                "position": position,
+                "size": size,
+                "color": color,
+                "velocity": velocity,
+                "lifetime": 100  # Lifetime in frames
+            }
+            self.particles.append(particle)
 
     def update(self):
         """Update particle positions and remove out-of-bounds particles."""
@@ -107,6 +114,7 @@ class ParticleCanvas(scene.SceneCanvas):
 
         self.timer = app.Timer(0.03, connect=self.update_particles, start=True)
 
+
     def update_particles(self, event):
         amplitude = visualization_data["amplitude"]
         dominant_note = visualization_data["dominant_note"]
@@ -117,6 +125,12 @@ class ParticleCanvas(scene.SceneCanvas):
         self.particle_system.update()
         positions, sizes, colors = self.particle_system.get_data()
 
+        # Handle empty particle lists
+        if len(positions) == 0 or len(sizes) == 0 or len(colors) == 0:
+            positions = np.zeros((1, 3))  # Placeholder position
+            sizes = np.zeros(1)          # Placeholder size
+            colors = np.zeros((1, 4))    # Placeholder color (RGBA)
+
         try:
             self.scatter.set_data(
                 pos=positions,
@@ -124,11 +138,13 @@ class ParticleCanvas(scene.SceneCanvas):
                 edge_color=colors,
                 face_color=colors
             )
+        
         except ValueError as e:
             print(f"Error setting data: {e}")
             print(f"Positions: {positions}")
             print(f"Sizes: {sizes}")
             print(f"Colors: {colors}")
+
 
 def main():
     global visualization_data
