@@ -4,9 +4,10 @@ from vispy import app, visuals, scene
 import random
 
 # Parameters
-samplerate = 22050  # Reduced sampling rate for Raspberry Pi
-duration = 0.2      # Increased duration per audio block
-block_size = int(samplerate * duration)
+sample_rates = {'desktop': 44100, 'raspberry': 2250}  # Selector based on device
+sample_rate = sample_rates["desktop"] 
+duration = 0.2                                         # Increased duration per audio block
+block_size = int(sample_rate * duration)
 db_threshold = 50    # Decibel threshold for triggering effects
 visualization_data = {"amplitude": 0, "fft": [], "frequencies": [], "dominant_note": "N/A"}
 
@@ -51,7 +52,7 @@ def process_audio(audio_block):
         decibels = 0
 
     fft = np.fft.fft(audio_block)
-    frequencies = np.fft.fftfreq(len(fft), 1 / samplerate)
+    frequencies = np.fft.fftfreq(len(fft), 1 / sample_rate)
     fft_magnitude = np.abs(fft[:len(fft) // 2])
     max_index = np.argmax(fft_magnitude)
     dominant_frequency = frequencies[max_index]
@@ -77,7 +78,7 @@ class ParticleSystem:
         for _ in range(5):  # Create up to 5 particles per note
             position = np.random.uniform(-1, 1, 3)
             size = np.random.randint(1, max(15, amplitude * 80))
-            velocity = np.random.uniform(-0.05, 0.05, 3) * amplitude * 20
+            velocity = np.random.uniform(-0.05, 0.05, 3) * amplitude * 30
             particle = {
                 "position": position,
                 "size": size,
@@ -158,7 +159,7 @@ class ParticleCanvas(scene.SceneCanvas):
 
 def main():
     global visualization_data
-    stream = sd.InputStream(callback=audio_callback, samplerate=samplerate, channels=1, blocksize=block_size)
+    stream = sd.InputStream(callback=audio_callback, samplerate=sample_rate, channels=1, blocksize=block_size)
     stream.start()
 
     canvas = ParticleCanvas()
