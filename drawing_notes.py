@@ -77,8 +77,8 @@ class ParticleSystem:
 
         for _ in range(5):  # Create up to 5 particles per note
             position = np.random.uniform(-1, 1, 3)
-            size = np.random.randint(1, max(12, amplitude * 80))
-            velocity = np.random.uniform(-0.02, 0.05, 3) * amplitude * 30
+            size = np.random.randint(1, max(30, amplitude * 80))
+            velocity = np.random.uniform(-0.02, 0.02, 3) * amplitude * 30
             particle = {
                 "position": position,
                 "size": size,
@@ -115,8 +115,8 @@ class ParticleSystem:
 class ParticleCanvas(scene.SceneCanvas):
     def __init__(self):
 
-        screen_size = {'laptop': (900, 900), 'projector': (3000,1500)}
-        scene.SceneCanvas.__init__(self, keys="interactive", size=screen_size['laptop'], bgcolor="black")
+        screen_size = {'laptop': (900, 900), 'projector': (1920,1080)}
+        scene.SceneCanvas.__init__(self, keys="interactive", size=screen_size['projector'], bgcolor="black", decorate=False)
         self.unfreeze()
         self.view = self.central_widget.add_view()
         self.view.camera = "arcball"

@@ -18,7 +18,7 @@ class ParticleSystem:
     def __init__(self, num_particles):
         self.num_particles = num_particles
         self.positions = np.random.uniform(-1, 1, (num_particles, 3))  # 3D positions
-        self.velocities = np.random.uniform(-0.01, 0.03, (num_particles, 3))  # Random 3D velocities
+        self.velocities = np.random.uniform(-0.01, 0.01, (num_particles, 3))  # Random 3D velocities
         self.sizes = np.random.uniform(5, 15, num_particles)  # Particle sizes
         self.colors = np.ones((num_particles, 4), dtype=np.float32)  # RGBA colors (white)
 
@@ -35,7 +35,7 @@ class ParticleSystem:
             # Increase sizes dynamically when sound is active
             if amplitude > 0.01:  # Sound activation threshold
                 base_increase = 10
-                self.sizes = np.random.randint(base_increase, np.clip(self.sizes + amplitude * 20, base_increase * 2, base_increase * 5))  # Grow sizes smoothly
+                self.sizes = np.random.randint(base_increase, np.clip(self.sizes + amplitude * 20, base_increase * 3, base_increase * 5))  # Grow sizes smoothly
             else:
                 self.sizes = np.clip(self.sizes - 1, 5, 15)  # Shrink back to default
 
@@ -71,7 +71,7 @@ def audio_callback(indata, frames, time, status):
 # VisPy Canvas setup
 class ParticleCanvas(scene.SceneCanvas):
     def __init__(self):
-        screen_size = {'laptop': (900, 900), 'projector': (3000,1500)}
+        screen_size = {'laptop': (1500, 900), 'projector': (3000,1500)}
         scene.SceneCanvas.__init__(self, keys='interactive', size=screen_size['laptop'], decorate=False)
         self.unfreeze()
 
