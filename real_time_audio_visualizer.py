@@ -18,7 +18,7 @@ class ParticleSystem:
     def __init__(self, num_particles):
         self.num_particles = num_particles
         self.positions = np.random.uniform(-1, 1, (num_particles, 3))  # 3D positions
-        self.velocities = np.random.uniform(-0.01, 0.01, (num_particles, 3))  # Random 3D velocities
+        self.velocities = np.random.uniform(-0.01, 0.03, (num_particles, 3))  # Random 3D velocities
         self.sizes = np.random.uniform(5, 15, num_particles)  # Particle sizes
         self.colors = np.ones((num_particles, 4), dtype=np.float32)  # RGBA colors (white)
 
@@ -34,9 +34,10 @@ class ParticleSystem:
 
             # Increase sizes dynamically when sound is active
             if amplitude > 0.01:  # Sound activation threshold
-                self.sizes = np.clip(self.sizes + amplitude * 15, 5, 50)  # Grow sizes smoothly
+                base_increase = 10
+                self.sizes = np.random.randint(base_increase, np.clip(self.sizes + amplitude * 20, base_increase * 2, base_increase * 5))  # Grow sizes smoothly
             else:
-                self.sizes = np.clip(self.sizes - 1, 5, 30)  # Shrink back to default
+                self.sizes = np.clip(self.sizes - 1, 5, 15)  # Shrink back to default
 
             # Change colors based on FFT
             if len(fft_magnitude) > 0:
@@ -74,7 +75,8 @@ def audio_callback(indata, frames, time, status):
 # VisPy Canvas setup
 class ParticleCanvas(scene.SceneCanvas):
     def __init__(self):
-        scene.SceneCanvas.__init__(self, keys='interactive', size=(3000,1500), decorate=False)
+        # scene.SceneCanvas.__init__(self, keys='interactive', size=    , decorate=False)
+        scene.SceneCanvas.__init__(self, keys='interactive', size=(900,900), decorate=False)
         self.unfreeze()
 
         # Create a viewbox for 3D rendering
