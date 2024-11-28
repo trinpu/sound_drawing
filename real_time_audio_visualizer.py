@@ -75,8 +75,8 @@ def audio_callback(indata, frames, time, status):
 # VisPy Canvas setup
 class ParticleCanvas(scene.SceneCanvas):
     def __init__(self):
-        # scene.SceneCanvas.__init__(self, keys='interactive', size=    , decorate=False)
-        scene.SceneCanvas.__init__(self, keys='interactive', size=(900,900), decorate=False)
+        screen_size = {'laptop': (900, 900), 'projector': (3000,1500)}
+        scene.SceneCanvas.__init__(self, keys='interactive', size=screen_size['laptop'], decorate=False)
         self.unfreeze()
 
         # Create a viewbox for 3D rendering
