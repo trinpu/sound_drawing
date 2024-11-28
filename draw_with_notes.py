@@ -74,7 +74,7 @@ class ParticleSystem:
                 "size": size,
                 "color": color,
                 "velocity": velocity,
-                "lifetime": 100  # Lifetime in frames
+                "lifetime": 10  # Lifetime in frames
             }
             self.particles.append(particle)
 
