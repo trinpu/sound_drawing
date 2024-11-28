@@ -10,14 +10,23 @@ block_size = int(samplerate * duration)
 db_threshold = 50    # Decibel threshold for triggering effects
 visualization_data = {"amplitude": 0, "fft": [], "frequencies": [], "dominant_note": "N/A"}
 
-# Galaxy-inspired color palette
-galaxy_colors = [
-    (0.5, 0.5, 1.0, 1.0),  # Blue-white
-    (1.0, 1.0, 0.8, 1.0),  # Warm white
-    (0.8, 0.6, 1.0, 1.0),  # Lavender
-    (0.6, 0.6, 0.9, 1.0),  # Soft blue
-    (0.8, 0.8, 1.0, 1.0)   # Pale violet
-]
+
+# Note colors
+note_to_color = {
+    "C": (1.0, 0.0, 0.0, 1.0),    # Red
+    "C#": (1.0, 0.5, 0.0, 1.0),   # Orange
+    "D": (1.0, 1.0, 0.0, 1.0),    # Yellow
+    "D#": (0.5, 1.0, 0.0, 1.0),   # Lime
+    "E": (0.0, 1.0, 0.0, 1.0),    # Green
+    "F": (0.0, 1.0, 0.5, 1.0),    # Aqua
+    "F#": (0.0, 1.0, 1.0, 1.0),   # Cyan
+    "G": (0.0, 0.5, 1.0, 1.0),    # Sky Blue
+    "G#": (0.0, 0.0, 1.0, 1.0),   # Blue
+    "A": (0.5, 0.0, 1.0, 1.0),    # Purple
+    "A#": (1.0, 0.0, 1.0, 1.0),   # Magenta
+    "B": (1.0, 0.0, 0.5, 1.0),    # Pink
+}
+
 
 def audio_callback(indata, frames, time, status):
     if status:
@@ -62,21 +71,22 @@ class ParticleSystem:
         if len(self.particles) >= 100:  # Limit total particles
             return
 
+        # Default to white if the note is unrecognized
+        color = note_to_color.get(dominant_note, (1.0, 1.0, 1.0, 1.0))
+
         for _ in range(5):  # Create up to 5 particles per note
             position = np.random.uniform(-1, 1, 3)
             size = max(5, amplitude * 50)
-            color = np.clip(np.array(random.choice(galaxy_colors), dtype=np.float32), 0.0, 1.0)  # Ensure floats in [0, 1]
-            if len(color) == 3:  # Add alpha if missing
-                color = np.append(color, 1.0)
             velocity = np.random.uniform(-0.02, 0.02, 3) * amplitude * 20
             particle = {
                 "position": position,
                 "size": size,
-                "color": color,
+                "color": np.array(color, dtype=np.float32),  # Use note color
                 "velocity": velocity,
                 "lifetime": 10  # Lifetime in frames
             }
             self.particles.append(particle)
+
 
     def update(self):
         """Update particle positions and remove out-of-bounds particles."""
