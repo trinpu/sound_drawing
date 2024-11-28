@@ -78,7 +78,7 @@ class ParticleSystem:
         for _ in range(5):  # Create up to 5 particles per note
             position = np.random.uniform(-1, 1, 3)
             size = np.random.randint(1, max(12, amplitude * 80))
-            velocity = np.random.uniform(-0.05, 0.05, 3) * amplitude * 30
+            velocity = np.random.uniform(-0.02, 0.05, 3) * amplitude * 30
             particle = {
                 "position": position,
                 "size": size,
@@ -158,7 +158,7 @@ class ParticleCanvas(scene.SceneCanvas):
             print(f"Sizes: {sizes}")
             print(f"Colors: {colors}")
 
-## Alternative particle canvas - connecting 8% of particles with lines
+## Alternative ParticleCanvas - connecting 8% of particles with lines
 ## Feels a bit distracting...
 
 # class ParticleCanvas(scene.SceneCanvas):
