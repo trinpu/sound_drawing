@@ -77,7 +77,7 @@ class ParticleSystem:
 
         for _ in range(5):  # Create up to 5 particles per note
             position = np.random.uniform(-1, 1, 3)
-            size = np.random.randint(1, max(15, amplitude * 80))
+            size = np.random.randint(1, max(12, amplitude * 80))
             velocity = np.random.uniform(-0.05, 0.05, 3) * amplitude * 30
             particle = {
                 "position": position,
@@ -114,8 +114,8 @@ class ParticleSystem:
 
 class ParticleCanvas(scene.SceneCanvas):
     def __init__(self):
-        
-        screen_size = {'latptop': (900, 900), 'projector': (3000,1500)}
+
+        screen_size = {'laptop': (900, 900), 'projector': (3000,1500)}
         scene.SceneCanvas.__init__(self, keys="interactive", size=screen_size['laptop'], bgcolor="black")
         self.unfreeze()
         self.view = self.central_widget.add_view()
@@ -157,6 +157,70 @@ class ParticleCanvas(scene.SceneCanvas):
             print(f"Positions: {positions}")
             print(f"Sizes: {sizes}")
             print(f"Colors: {colors}")
+
+## Alternative particle canvas - connecting 8% of particles with lines
+## Feels a bit distracting...
+
+# class ParticleCanvas(scene.SceneCanvas):
+#     def __init__(self):
+#         screen_size = {'laptop': (900, 900), 'projector': (3000,1500)}
+#         scene.SceneCanvas.__init__(self, keys="interactive", size=screen_size['laptop'], bgcolor="black")
+#         self.unfreeze()
+#         self.view = self.central_widget.add_view()
+#         self.view.camera = "arcball"
+
+#         self.particle_system = ParticleSystem()
+#         self.scatter = scene.visuals.Markers()
+#         self.view.add(self.scatter)
+
+#         # Add a Line visual for connecting particles
+#         self.lines = scene.visuals.Line(parent=self.view.scene, color='white', width=2)
+
+#         self.timer = app.Timer(0.03, connect=self.update_particles, start=True)
+
+#     def update_particles(self, event):
+#         amplitude = visualization_data["amplitude"]
+#         dominant_note = visualization_data["dominant_note"]
+
+#         if visualization_data["decibels"] >= db_threshold and dominant_note != "N/A":
+#             self.particle_system.create_particles(amplitude, dominant_note)
+
+#         self.particle_system.update()
+#         positions, sizes, colors = self.particle_system.get_data()
+
+#         # Handle empty particle lists
+#         if len(positions) == 0 or len(sizes) == 0 or len(colors) == 0:
+#             positions = np.zeros((1, 3))  # Placeholder position
+#             sizes = np.zeros(1)          # Placeholder size
+#             colors = np.zeros((1, 4))    # Placeholder color (RGBA)
+
+#         # Update the scatter plot for particles
+#         try:
+#             self.scatter.set_data(
+#                 pos=positions,
+#                 size=sizes,
+#                 edge_color=colors,
+#                 face_color=colors
+#             )
+#         except ValueError as e:
+#             print(f"Error setting data: {e}")
+#             print(f"Positions: {positions}")
+#             print(f"Sizes: {sizes}")
+#             print(f"Colors: {colors}")
+
+#         # Update the line connecting particles
+#         if len(positions) > 1:
+#             # Determine number of connections (30% of particles)
+#             num_connections = int(len(positions) * 0.08)
+            
+#             # Randomly select unique pairs of indices
+#             random_indices = np.random.choice(len(positions), size=(num_connections, 2), replace=False)
+            
+#             # Create line positions from the random pairs
+#             lines_positions = positions[random_indices.flatten()]
+            
+#             # Update the line visual
+#             self.lines.set_data(pos=lines_positions, color='grey', width=0.5)
 
 
 def main():
